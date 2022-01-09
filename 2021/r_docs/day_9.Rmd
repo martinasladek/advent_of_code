@@ -1,0 +1,198 @@
+---
+title: "Untitled"
+author: "MS"
+date: "23/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(stringr)
+
+lines <- readLines("../data/day_9_a.txt")
+data <- do.call(rbind, lapply(strsplit(lines, ""), as.numeric)) %>% 
+  as.data.frame()
+```
+
+# Part 1
+
+```{r}
+data_down <- rbind(data[2:nrow(data),], 99)
+down_comp <- data < data_down
+
+data_up <- rbind(99, data[1:nrow(data)-1,])
+up_comp <- data < data_up
+
+data_left <- cbind(99, data[,1:ncol(data)-1])
+left_comp <- data < data_left
+
+data_right <- cbind(data[,2:ncol(data)], 99)
+right_comp <- data < data_right
+
+sum_comp <- up_comp + down_comp + left_comp + right_comp
+```
+
+```{r}
+sum(data[sum_comp == 4] +1)
+```
+
+# Part 2
+
+Assumption: basin is any patch of numbers surrounded by 9s. 
+We don't care about which numbers they are, just about how many of them are clustered together and surrounded by 9s.
+
+This is not really necessary but helps to visualise the map:
+
+```{r}
+data[data != 9] <- 1
+data[data == 9] <- 999
+```
+
+Get the maximum possible basin width and length (needed for loop later) - basically what is the longest stretch of 1s in all rows and columns?
+
+```{r}
+row_string <- data %>% 
+  t() %>% c() %>% 
+  paste0(., collapse = "") %>% stringr::str_split(., pattern = "[9]")
+
+col_string <- data %>% 
+  unlist() %>% 
+  paste0(., collapse = "") %>% stringr::str_split(., pattern = "[9]")
+
+max_basin_width <- row_string[[1]] %>% nchar() %>% max()
+max_basin_length <- col_string[[1]] %>% nchar() %>% max()
+
+max_basin_size = max_basin_width*max_basin_length
+```
+
+Get the coordinates for all the data points that are equal to 1 - coordinates being row and column indices. 
+
+```{r}
+plot_data = NULL
+for(i in 1:ncol(data)){
+  
+  col_i = which(data[,i] == 1)
+  
+  for(j in 1:length(col_i)){
+    
+    plot_data = 
+      rbind.data.frame(
+        plot_data, 
+        data.frame(
+          x = col_i[j], 
+          y = i
+        )
+      )
+  }
+}
+
+plot_data %<>% dplyr::mutate(row_id = 1:nrow(.))
+
+```
+
+
+The following loop is *extremely* inefficient, but honestly, I was just happy to get this working and get the right answer. It completed the example data within a split second, but I've underestimated the size of the actual data. Run time is about 8 minutes. 
+
+1. Take the first row of the data with the coordinates. 
+2. add it to new dataset, with group index of whatever row_if the current row has - this group index will be used to differentiate the basins. 
+3. Once you've identified the row, take the current group and search the original plot_data for points that share either x or y with the current row (i.e. point/iteration), while the other coordinate is either +1 or -1 of the remaining coordinate. 
+4. Add the identified points into the new dataset with the index of the current group. Repeat the process for the group until no other points are added. 
+5. Move on to the next row in the original dataset. If the row_id is already in the new dataset, move on to the next row until you find a row that hasn't been evaluated yet. 
+
+
+```{r}
+plot_data_grouped = NULL
+
+for(i in 1:nrow(plot_data)){
+  
+  g = plot_data[i, ]$row_id[1]
+  
+  plot_data_i = plot_data[i, ] %>% 
+    dplyr::mutate(group = g)
+  
+  if(g %in% plot_data_grouped$row_id) next
+  
+  plot_data_grouped = rbind.data.frame(
+    plot_data_grouped, 
+    plot_data_i
+  )
+
+  for(j in 1:(max_basin_size) ){ # this is probably the biggest time-waster. I had no conception of how large the largest group could have been, so the code just loops through the maximum possible basin size - there was probably a more sophisticated way to estimate this. Which means that it's also looping through empty rows dozens of times for the smaller basins, given that the max group size is 105. I've added a `next` command on line 138 just to save a little bit of time but it doesn't help awful lot. My thinking was to break the loop instead, which sped things up considerably, but that didn't lead to the right answer - on rare occasions, empty unique rows are needed so that the loop can get to the next step, which will not necessarily be empty. Overall, this took about 8 minutes to run. 
+
+    current_group_data = plot_data_grouped %>% 
+      dplyr::filter(group == g)
+    
+    plot_data_j = current_group_data[j, ]
+    
+    plot_data_filtered_j <- plot_data %>% 
+      dplyr::filter((x == plot_data_j$x & (y == (plot_data_j$y + 1) | (y == (plot_data_j$y - 1)))) |
+                      (y == plot_data_j$y & (x == (plot_data_j$x + 1) | (x == (plot_data_j$x - 1)))), 
+                    !row_id %in% plot_data_grouped$row_id
+                    ) %>% 
+      dplyr::mutate(group = g)
+    
+    if(nrow(plot_data_filtered_j) == 0) next
+    
+    plot_data_grouped = rbind.data.frame(
+      plot_data_grouped, 
+      plot_data_filtered_j
+    ) 
+    
+  }
+  
+  print((i/nrow(plot_data)*100))
+}
+
+group_sum <- plot_data_grouped %>% 
+  dplyr::group_by(group) %>% 
+  dplyr::summarise(n = n()) %>% 
+  dplyr::arrange(desc(n))
+
+
+prod(group_sum[1:3, "n"])
+
+```
+
+As an apology for the long run-time, here are some plots of the basins.
+
+```{r}
+ggplot2::ggplot(plot_data, aes(x = y, y = x)) + 
+  geom_point(size = 1) +
+  scale_y_reverse() + 
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank()
+  )
+
+# colour by cluster
+
+ggplot2::ggplot(plot_data_grouped, aes(x = y, y = x, colour = as.factor(group))) + 
+  geom_point(size = 1) +
+  scale_y_reverse() + 
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(), 
+    legend.position = "none"
+  )
+
+# coloured by size 
+
+plot_data_grouped_by_size <- plot_data_grouped %>% 
+  dplyr::left_join(., group_sum, by = "group")
+
+ggplot2::ggplot(plot_data_grouped_by_size, aes(x = y, y = x, alpha = n)) + 
+  geom_point(size = 1, colour = "#0032ba") +
+  scale_y_reverse() + 
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(), 
+    legend.position = "none"
+  )
+```
+
+
+

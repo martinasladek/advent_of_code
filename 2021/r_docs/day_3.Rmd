@@ -1,0 +1,97 @@
+---
+title: "day_2"
+author: "MS"
+date: "07/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(magrittr)
+library(stringr)
+
+data <- read.delim("../data/day_3_a.txt", header = F, col.names = "x", colClasses = "character")
+data
+```
+
+# Task 1 
+
+```{r}
+nchar <- nchar(data$x[1])
+nrow <- nrow(data)
+
+data_bin <- data %>% 
+  tidyr::separate(col = x, into = as.character(c(0:nchar)), sep = "") %>% 
+  t() %>% as.data.frame() %>% 
+  dplyr::mutate(across(V1:V1000, as.numeric)) %>% 
+  dplyr::mutate(
+    sum = rowSums(dplyr::select(., contains("V"))), 
+    gamma = if_else(sum > nrow/2, 1, 0), 
+    epsilon = if_else(sum < nrow/2, 1, 0)
+    ) %>% dplyr::select(V1000, sum, gamma, epsilon)
+
+
+gamma <- data_bin[2:13 ,"gamma"] %>% paste0(collapse = "") %>% strtoi(., base = 2)
+epsilon <- data_bin[2:13 ,"epsilon"] %>% paste0(collapse = "") %>% strtoi(., base = 2)
+
+gamma*epsilon
+```
+
+# Task 2 
+
+Life support rating = oxygen generator rating * CO2 scrubber rating 
+
+1. Consider just the first bit of the values -> keep only the values that match the bit criteria, discard rest. 
+2. Stop when there is one number left - this is the rating value
+3. Otherwise repeat the process, considering the next bit to the right, 
+
+```{r}
+data_for_looping <- data %>% 
+  tidyr::separate(col = x, into = as.character(c(0:nchar(data$x[1]))), sep = "") %>% 
+  #t() %>% as.data.frame() %>% 
+  dplyr::select(-`0`) %>% 
+  dplyr::mutate(across(1:12, as.numeric))
+```
+
+
+```{r}
+data_looped_o2 = NULL
+for(i in 1:12){
+  
+  if(i == 1){data_i = data_for_looping}
+  else{data_i = data_i_filtered}
+  
+  if(nrow(data_i) == 1){next}
+  
+  nrow_i = nrow(data_i)
+  to_keep_i <- if_else(sum(data_looped_o2[ ,i]) >= nrow_i/2, 1, 0)
+  data_i_filtered <- data_i[which(data_i[, i] == to_keep_i) ,]
+  data_looped_o2 <- data_i_filtered
+  
+}
+
+o2_rating <- data_looped_o2[1, ] %>% paste0(collapse = "") %>% strtoi(., base = 2)
+
+data_looped_co2 = NULL
+for(i in 1:12){
+  
+  if(i == 1){data_i = data_for_looping}
+  else{data_i = data_i_filtered}
+  
+  if(nrow(data_i) == 1){next}
+  
+  nrow_i = nrow(data_i)
+  to_keep_i <- if_else(sum(data_looped_co2[ ,i]) >= nrow_i/2, 0, 1)
+  data_i_filtered <- data_i[which(data_i[, i] == to_keep_i) ,]
+  data_looped_co2 <- data_i_filtered
+  
+}
+
+co2_rating <- data_looped_co2[1, ] %>% paste0(collapse = "") %>% strtoi(., base = 2)
+
+o2_rating*co2_rating
+```
+
+ 

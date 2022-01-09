@@ -1,0 +1,98 @@
+---
+title: "Untitled"
+author: "MS"
+date: "03/01/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(magrittr)
+library(stringr)
+
+data <- read.delim("../data/day_10_a.txt", col.names = "x", header = F)
+```
+
+# Task 1
+
+- characters can never "face" each other unless they are of the same kind. 
+
+{([(< {}*[*<>[]*}* >{[]{[(<()> - Expected ], but found } instead.
+[[<*[*([])*)*<([[{}[[()]]]     - Expected ], but found ) instead.
+[{[{*(*{}*]*{}}([{[{{{}}([]    - Expected ), but found ] instead.
+[<(<(<(*<*{}*)*)><([]([]()     - Expected >, but found ) instead.
+<{([(*[*[(<>()){}]*>*(<<{{     - Expected ], but found > instead.
+
+Remove matching brackets one by one, see what's left and go from there
+
+```{r}
+for(i in 1:max(nchar(data$x))){
+
+  data_i <- data %>% 
+    dplyr::mutate(
+      x = stringr::str_remove(x, "\\<\\>|\\(\\)|\\[\\]|\\{\\}")
+    )
+  
+    # repeat until there is no change in the data
+    if(sum(data_i == data) == nrow(data)) break
+    
+    data = data_i
+  
+}  
+
+data %<>% 
+  dplyr::mutate(
+    illegal = str_extract(x ,"\\>|\\)|\\]|\\}"), 
+    score = case_when(
+      stringr::str_detect(illegal, "\\)") ~ 3, 
+      stringr::str_detect(illegal, "\\]") ~ 57,
+      stringr::str_detect(illegal, "\\}") ~ 1197,
+      stringr::str_detect(illegal, "\\>") ~ 25137,
+      TRUE ~ 0
+    )
+  )
+
+sum(data$score, na.rm = T)
+```
+
+# Part 2 
+
+Incomplete lines:
+
+[({(<(())[]>[[{[]{<()<>> - Complete by adding }}]])})]
+[(()[<>])]({[<{<<[]>>( - Complete by adding )}>]})
+(((({<>}<{<{<>}{[]{[]{} - Complete by adding }}>}>))))
+{<[[]]>}<{[{[{[]{()[[[] - Complete by adding ]]}}]}]}>
+<{([{{}}[<[[[<>{}]]]>[]] - Complete by adding ])}>
+
+[({([[{{ ... }}]])})] 
+
+Select only the bits of data where score == 0, then complete the brackets but adding the missing brackets *in reversed order*. 
+
+```{r}
+reverse_and_score <- function(line){
+  
+  line %<>% 
+    str_replace_all(., "\\(", "1") %>% 
+    str_replace_all(., "\\[", "2") %>% 
+    str_replace_all(., "\\{", "3") %>% 
+    str_replace_all(., "\\<", "4")
+  
+  rev_line = rev(stringr::str_split(line , "")[[1]]) %>% 
+    as.numeric()
+  
+  score = 0
+  for(i in rev_line) score = score*5 + i
+  
+  return(score)
+}
+
+data %<>% 
+  dplyr::filter(score == 0) %>% 
+  dplyr::rowwise() %>% 
+  dplyr::mutate(p2_score = reverse_and_score(x))
+
+median(data$p2_score)
+```

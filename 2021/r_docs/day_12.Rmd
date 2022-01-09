@@ -1,0 +1,19 @@
+---
+title: "Untitled"
+author: "MS"
+date: "03/01/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(magrittr)
+library(stringr)
+
+lines <- readLines(here::here("data/day_12_example.txt"))
+data_1 <- do.call(rbind, lapply(strsplit(lines, ""), as.numeric))
+```
+
+# Task 1

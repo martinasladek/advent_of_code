@@ -1,0 +1,75 @@
+---
+title: "day_2"
+author: "MS"
+date: "07/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(magrittr)
+library(stringr)
+
+data <- read.delim("../data/day_2_a.txt", header = F, col.names = "x")
+data
+```
+
+# Task 1 
+
+```{r}
+# Horizontal position
+
+data_horizontal <- data %>% 
+  dplyr::filter(stringr::str_detect(x,"forward")) %>% 
+  dplyr::mutate(x = readr::parse_number(x))
+
+x = sum(data_horizontal$x)
+
+# Vertical position
+
+data_vertical <- data %>% 
+  dplyr::filter(!stringr::str_detect(x,"forward")) %>% 
+  dplyr::mutate(
+    x = stringr::str_replace_all(x, "down ", "") %>% 
+      stringr::str_replace_all(., "up ", "-") %>% 
+      readr::parse_number(x), 
+  )
+
+y = sum(data_vertical$x)
+
+x*y
+```
+
+# Task 2 
+
+```{r}
+data_aim <- 
+  data %>% 
+  dplyr::mutate(
+    group = if_else(str_detect(x, "forward"), "position", "aim"),
+    x_num = stringr::str_replace_all(x, "down ", "+") %>% 
+      stringr::str_replace_all(., "up ", "-") %>% 
+      readr::parse_number()
+    ) %>% 
+  dplyr::group_by(group) %>% 
+  dplyr::mutate(
+     aim = cumsum(x_num), 
+     aim = if_else(group == "aim", aim, as.numeric(NA))
+     ) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate( 
+     aim = zoo::na.locf(aim, na.rm = FALSE),
+     aim = if_else(is.na(aim), 0, aim),
+     horizontal = if_else(group == "position", x_num, 0), 
+     horizontal = cumsum(horizontal),
+     depth = if_else(group == "position", aim*x_num, 0) %>% cumsum()
+    )
+
+x = sum(data_aim$horizontal, na.rm = T)
+y = sum(data_aim$depth, na.rm = T)
+
+data_aim[nrow(data_aim), "horizontal"] * data_aim[nrow(data_aim), "depth"] 
+
+```

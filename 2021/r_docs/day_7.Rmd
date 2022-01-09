@@ -1,0 +1,55 @@
+---
+title: "day_2"
+author: "MS"
+date: "07/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(stringr)
+
+#data <- c(16, 1, 2, 0, 4, 2, 7, 1, 2, 14)
+
+data <- read.delim("../data/day_7_a.txt", header = F, sep = ",") 
+
+data <- data[1, ] %>% unlist()
+
+```
+
+# Task 1 
+
+```{r}
+median = median(data)
+
+median
+
+sum(abs(data - median))
+```
+
+# Task 2
+
+```{r}
+x = data
+y = floor(mean(data))
+
+data_2 <- data.frame(
+  x = x,
+  y = y, 
+  diff = abs(x - y) 
+) %>% 
+  dplyr::rowwise() %>% 
+  dplyr::mutate(
+    sum = sum(0:diff)
+  ) %>% 
+  dplyr::ungroup()
+
+
+data_2$sum %>% sum()
+
+```
+

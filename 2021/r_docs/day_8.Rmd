@@ -1,0 +1,138 @@
+---
+title: "day_2"
+author: "MS"
+date: "07/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(stringr)
+
+#data <- c(16, 1, 2, 0, 4, 2, 7, 1, 2, 14)
+
+data <- read.delim("../data/day_8_a.txt", header = F, sep = ",", col.names = "x") 
+
+
+```
+
+# Part 2
+
+```{r}
+sort_characters <- function(x){
+  paste0(sort(unlist(strsplit(x, ""))), collapse = "")
+}
+```
+
+```{r}
+processed_data <- data %>% 
+  tidyr::separate(x, sep = "[|]", into = c("pre", "post")) %>% 
+  dplyr::mutate(
+    pre = trimws(pre, which = "both"),
+    post = trimws(post, which = "both"), 
+    order = 1:nrow(.) 
+  ) %>% 
+  tidyr::separate(pre, sep = " ", into = paste0("pre_", 1:10)) %>% 
+  tidyr::separate(post, sep = " ", into = paste0("post_", 1:4)) %>% 
+  tidyr::pivot_longer(
+    cols = -order,
+    names_to = "col", 
+    values_to = "input"
+  ) %>% 
+  dplyr::mutate(
+    n_char = nchar(input), 
+    digit = case_when(
+      n_char == 3 ~ 7, 
+      n_char == 2 ~ 1, 
+      n_char == 4 ~ 4, 
+      n_char == 7 ~ 8
+    ), 
+  ) %>% 
+  dplyr::rowwise() %>% 
+  dplyr::mutate(
+    input_sorted = sort_characters(input), 
+  ) %>% 
+  dplyr::group_by(order)
+
+  
+pd_list <- processed_data %>% 
+  dplyr::group_split()
+
+```
+
+```{r}
+decode_digits <- function(pd_list_df){
+  
+  d1 <- dplyr::filter(pd_list_df, digit == 1)[1, ] 
+  chars_1 <- str_split(d1$input_sorted[1], "")[[1]]
+  
+  d4 <- dplyr::filter(pd_list_df, digit == 4)[1, ]
+  chars_4 <- str_split(d4$input_sorted[1], "")[[1]]
+  
+  pd_list_df %>% 
+    dplyr::rowwise() %>% 
+    dplyr::mutate(
+      digit = case_when(
+        
+        # 5-character digits:
+        is.na(digit) & n_char == 5 & 
+          sum(str_detect(input, chars_1)) == 1 & 
+          sum(str_detect(input, chars_4)) == 2 ~ 2,
+        
+        is.na(digit) & n_char == 5 & 
+          sum(str_detect(input, chars_1)) == 2 & 
+          sum(str_detect(input, chars_4)) == 3 ~ 3,
+        
+        is.na(digit) & n_char == 5 & 
+          sum(str_detect(input, chars_1)) == 1 & 
+          sum(str_detect(input, chars_4)) == 3 ~ 5,
+        
+        is.na(digit) & n_char == 5 & 
+          sum(str_detect(input, chars_1)) == 2 & 
+          sum(str_detect(input, chars_4)) == 3 ~ 3,
+        
+        # 6-character digits:
+        is.na(digit) & n_char == 6 & 
+          sum(str_detect(input, chars_1)) == 2 & 
+          sum(str_detect(input, chars_4)) == 3 ~ 0,
+        
+        is.na(digit) & n_char == 6 & 
+          sum(str_detect(input, chars_1)) == 1 & 
+          sum(str_detect(input, chars_4)) == 3 ~ 6,
+        
+        is.na(digit) & n_char == 6 & 
+          sum(str_detect(input, chars_1)) == 2 & 
+          sum(str_detect(input, chars_4)) == 4 ~ 9,
+        
+        TRUE ~ digit
+        
+      )
+    )
+  
+}
+```
+
+
+```{r}
+pd_list <- purrr::map(.x = pd_list, .f = decode_digits)
+# check that there are no more missing digits
+Filter(function(x) any(is.na(x)), pd_list) %>% length()
+```
+
+
+```{r}
+pd_data <- do.call(rbind.data.frame, pd_list)
+
+pd_data %<>% 
+  dplyr::ungroup() %>% 
+  dplyr::filter(str_detect(col, "post")) %>% 
+  tidyr::pivot_wider(id_cols = c(order), names_from = col, values_from = digit) %>% 
+  dplyr::mutate(digit = as.numeric(paste0(post_1, post_2, post_3, post_4)))
+
+sum(pd_data$digit)
+```
+

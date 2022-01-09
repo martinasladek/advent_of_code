@@ -1,0 +1,214 @@
+---
+title: "Untitled"
+author: "MS"
+date: "03/01/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(magrittr)
+library(stringr)
+
+lines <- readLines("../data/day_11_a.txt")
+data_1 <- do.call(rbind, lapply(strsplit(lines, ""), as.numeric)) %>% 
+  as.matrix()
+```
+
+# Task 1
+
+```{r}
+data = data_1
+nrow = nrow(data)
+ncol = ncol(data)
+
+flash_count = 0
+
+for (k in 1:100) {
+  
+  # take 1 step: 
+  data = data + 1
+  
+  flashes_casued_by_step = sum(data > 9)
+  
+  flash_count = flash_count + flashes_casued_by_step
+  
+  # Neighbour chain flashes: for each flashing octopus, increase neighbours by 1 
+  # and repeat until there are no more chain flashes. 
+  
+  previous_chain_flash = NULL
+  for (j in 1:101) {
+    
+    # Get coordinates of each octopuses (arr.ind = T returns both row and col)
+    
+    current_chain_flash = which(data > 9, arr.ind = T)
+    flashing = which(data > 9 & data < 100, arr.ind = T)
+    
+    if(
+      nrow(current_chain_flash) == 0 | 
+      identical(previous_chain_flash, current_chain_flash) | 
+      nrow(flashing) == 0
+    ) {
+      data[which(data > 9)] = 0 
+      break
+    }
+    
+    
+    adj_1 = flashing - 1
+    
+    adj_2 = flashing
+    adj_2[,1] = adj_2[,1] - 1
+    
+    adj_3 = flashing
+    adj_3[,1] = adj_3[,1] - 1
+    adj_3[,2] = adj_3[,2] + 1
+    
+    adj_4 = flashing
+    adj_4[,2] = adj_4[,2] - 1
+    
+    adj_5 = flashing
+    adj_5[,2] = adj_5[,2] + 1
+    
+    adj_6 = flashing
+    adj_6[,1] = adj_6[,1] + 1
+    adj_6[,2] = adj_6[,2] - 1
+    
+    adj_7 = flashing
+    adj_7[,1] = adj_7[,1] + 1
+    
+    adj_8 = flashing + 1
+    
+    
+    chain_dat <- rbind.data.frame(
+      adj_1, adj_2, adj_3, adj_4, adj_5, adj_6, adj_7, adj_8
+    )  
+    
+    # neighbours on the edges of the matrix don't have adjacent octopuses: 
+    chain_dat %<>% dplyr::filter(row %in% 1:nrow, col %in% 1:ncol)
+    
+    # update energy levels of octopuses that already flashed
+    for (i in 1:nrow(flashing)) {
+      data[flashing[i,1], flashing[i,2]] = 100
+    }
+    
+    # update energy levels of octopuses adjacent to the flashing octopuses
+    for (i in 1:nrow(chain_dat)) {
+      energy_i = data[chain_dat[i,1], chain_dat[i,2]]
+      data[chain_dat[i,1], chain_dat[i,2]] = energy_i + 1
+    }
+    
+    # update flash count 
+    chain_flashes_j <- nrow(which(data > 9 & data < 100, arr.ind = T))
+    flash_count = flash_count + chain_flashes_j
+    
+    previous_chain_flash = which(data > 100, arr.ind = T)
+    
+  }
+  
+}
+
+flash_count
+```
+
+adj: 
+1 2 3 
+4 - 5
+6 7 8 
+
+# Task 2
+
+```{r}
+data = data_1
+nrow = nrow(data)
+ncol = ncol(data)
+
+flash_count = 0
+
+for (k in 1:1000) {
+  
+  if(sum(data) == 0){
+      print(k-1)
+      break
+      }
+  
+  # take 1 step: 
+  data = data + 1
+  
+  flashes_casued_by_step = sum(data > 9)
+  
+  flash_count = flash_count + flashes_casued_by_step
+  
+  # Neighbour chain flashes: for each flashing octopus, increase neighbours by 1 
+  # and repeat until there are no more chain flashes. 
+  
+  previous_chain_flash = NULL
+  for (j in 1:100) {
+    
+    # Get coordinates of each octopuses
+    
+    current_chain_flash = which(data > 9, arr.ind = T)
+    flashing = which(data > 9 & data < 100, arr.ind = T)
+    
+    if(
+      nrow(current_chain_flash) == 0 | 
+      identical(previous_chain_flash, current_chain_flash) | 
+      nrow(flashing) == 0
+    ) {
+      data[which(data > 9)] = 0 
+      break
+    }
+    
+    adj_1 = flashing - 1
+    
+    adj_2 = flashing
+    adj_2[,1] = adj_2[,1] - 1
+    
+    adj_3 = flashing
+    adj_3[,1] = adj_3[,1] - 1
+    adj_3[,2] = adj_3[,2] + 1
+    
+    adj_4 = flashing
+    adj_4[,2] = adj_4[,2] - 1
+    
+    adj_5 = flashing
+    adj_5[,2] = adj_5[,2] + 1
+    
+    adj_6 = flashing
+    adj_6[,1] = adj_6[,1] + 1
+    adj_6[,2] = adj_6[,2] - 1
+    
+    adj_7 = flashing
+    adj_7[,1] = adj_7[,1] + 1
+    
+    adj_8 = flashing + 1
+    
+    
+    chain_dat <- rbind.data.frame(
+      adj_1, adj_2, adj_3, adj_4, adj_5, adj_6, adj_7, adj_8
+    )  
+    
+    chain_dat %<>% dplyr::filter(row %in% 1:nrow, col %in% 1:ncol)
+    
+    # update energy levels of octopuses that already flashed
+    for (i in 1:nrow(flashing)) {
+      data[flashing[i,1], flashing[i,2]] = 100
+    }
+    
+    # update energy levels of octopuses adjacent to the flashing octopuses
+    for (i in 1:nrow(chain_dat)) {
+      energy_i = data[chain_dat[i,1], chain_dat[i,2]]
+      data[chain_dat[i,1], chain_dat[i,2]] = energy_i + 1
+    }
+    
+    # update flash csount 
+    chain_flashes_j <- nrow(which(data > 9 & data < 100, arr.ind = T))
+    flash_count = flash_count + chain_flashes_j
+    
+    previous_chain_flash = which(data > 100, arr.ind = T)
+    
+  }
+  
+}
+```

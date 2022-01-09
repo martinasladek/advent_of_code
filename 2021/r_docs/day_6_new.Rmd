@@ -1,0 +1,212 @@
+---
+title: "day_2"
+author: "MS"
+date: "07/12/2021"
+output: html_document
+---
+
+Task 2 not completed. 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(stringr)
+
+
+#data[[1]] <- c(3,4,3,1,2)
+data[[1]] <- c(3,5,1,5,3,2,1,3,4,2,5,1,3,3,2,5,1,3,1,5,5,1,1,1,2,4,1,4,5,2,1,2,4,3,1,2,3,4,3,4,4,5,1,1,1,1,5,5,3,4,4,4,5,3,4,1,4,3,3,2,1,1,3,3,3,2,1,3,5,2,3,4,2,5,4,5,4,4,2,2,3,3,3,3,5,4,2,3,1,2,1,1,2,2,5,1,1,4,1,5,3,2,1,4,1,5,1,4,5,2,1,1,1,4,5,4,2,4,5,4,2,4,4,1,1,2,2,1,1,2,3,3,2,5,2,1,1,2,1,1,1,3,2,3,1,5,4,5,3,3,2,1,1,1,3,5,1,1,4,4,5,4,3,3,3,3,2,4,5,2,1,1,1,4,2,4,2,2,5,5,5,4,1,1,5,1,5,2,1,3,3,2,5,2,1,2,4,3,3,1,5,4,1,1,1,4,2,5,5,4,4,3,4,3,1,5,5,2,5,4,2,3,4,1,1,4,4,3,4,1,3,4,1,1,4,3,2,2,5,3,1,4,4,4,1,3,4,3,1,5,3,3,5,5,4,4,1,2,4,2,2,3,1,1,4,5,3,1,1,1,1,3,5,4,1,1,2,1,1,2,1,2,3,1,1,3,2,2,5,5,1,5,5,1,4,4,3,5,4,4)
+
+
+
+data <- read.delim("../data/day_6_a.txt", header = F)
+# 
+# data %>% 
+#   tidyr::separate(V1, sep = ",", into = as.character(c(1:26))) %>% 
+#   write.csv("../data/day_6_bamboozled.csv")
+```
+
+WG100XM3
+
+# Task 1
+
+```{r}
+data = list()
+data[[1]]  = c(5)
+
+n_days = 80
+
+for(i in 2:(n_days+1)){
+  data[[i]] <- replace(data[[i-1]], data[[i-1]]==0, 7)
+  data[[i]] <- data[[i]] - 1
+  
+  n_new_fish <- sum(data[[i-1]] == 0)
+  
+  data[[i]] <- c(data[[i]], rep(8, times = n_new_fish))
+
+  print(i)
+}
+
+```
+
+```{r}
+lapply(data, write, "test.txt", append=TRUE, ncolumns=8000)
+
+```
+
+
+```{r}
+sum(12:1)
+```
+
+
+# Task 2
+
+(note for when you get there - you won't have to model this for every single fish. Just for groups of fish with different starting points, which can only be 5, 4, 3, 2, or 1)
+
+If fish 1G1 (from the first generation) starts (day 0) at day 5, then a new fish is produced on
+- day 6 + 7 + 7 + 7 + 7 + 7 + 7... 
+  - on any given day thereafter, this fish would have produced `r floor(n_day/7) + 1` fish
+  - so after 80 days, this fish produced `r floor(80/7) + 1` fish (n_g2 = 12)
+  
+    - fish baby 1G2 produces a new fish on:
+      day 15 (day it was born 6 + 9) + 7 + 7 + 7 ... on any given day, this fish produced `r floor(n_day/7) - 1` fish. 
+      After 80 days, this was n = 12
+    - fish 2G2 produces a new fish on 
+      day 6 + 7 + 9 = 22 + 7 + 7 + 7... `r floor(n_day) - 2` fish
+      After 80, this was n = 9
+    - fish 3G2 produces a new fish on day 6 + 7 + 7 + 9 = 29 + 7 + 7 + 7...  `r floor(n_day/7) - 3` fish
+      After 80 days ... n = 8 
+    - fish 4G2 6 + 3*7 + 9 = 36 + 7 + 7 + 7... 
+      After 80 days `r floor(80/7) - 4`
+      ...
+      ...
+    - fish 12G2 produces `r floor(80/7) - 12`
+    - all G2 fish would produce (floor(80/7) * (floor(80/7) + 1)) - 12 - 11 - 10 - 9 - 8 - 7 - 6 - 5 - 4 - 3 - 2 - 1 ... 
+      in other words: (n_g2 * floor(80/7)) - sum(12:1) = n_g3
+      - First 1G3 fish is produced on day 15. it produces new fish on 15 + 9: 
+                        day 24 + 7 + 7 + 7 + ... `r floor(80/7) - 2`
+      - 2G3 on day 22 + 9 = 31 + 7 + 7 + 7 + ... `r floor(80/7) - 3` 
+      - 3G3 on day 29 + 9 = 38 + 7 + 7 + 7 + ... `r floor(80/7) - 4`
+      - 4G3 on day 36 + 9 = 45 + 7 + 7 + 7 + ... `r floor(80/7) - 5`
+      - 5G3 on day 43 + 9 = 52 + 7 + 7 + 7 + ... `r floor(80/7) - 6`
+      - 6G3 on day 50 + 9 = 59 + 7 + 7 + 7   ... `r floor(80/7) - 7`
+      - 7G3 on day 57 + 9 = 66 + 7 + 7       ... `r floor(80/7) - 8`
+      - 8G3 on day 64 + 9 = 73 + 7           ... `r floor(80/7) - 9`
+      - 9G3 on day 71 + 9 = 80               ... `r floor(80/7) - 10`
+
+
+From each generation, how many fish have time to reproduce? 
+
+day_1G_repro: day on which the first fish from that generation produces a new fish.
+
+n_repro = floor((80 - day_1G_repro)/7) + 1
+
+how to figure out day_1G_repro? 
+
+day_1G1_repro = 6
+day_1G2_repro = 6 + 9
+day_1G3_repro = 6 + 9 + 9
+
+day_1G_repro = 6 + 9*(G-1)
+
+... loop until a generation doesn't reproduce
+
+```{r}
+# day 0 of calendar is day 5 of the reproductive cycle
+days = 80
+cycle_count = floor(days/7)
+
+n_g02 = cycle_count + 1
+n_g03 = n_g02 * cycle_count - sum(n_g2: 1)
+n_g04 = n_g03 * cycle_count - sum(n_g3: 2)
+n_g05 = n_g04 * cycle_count - sum(n_g2: 3)
+n_g06 = n_g05 * cycle_count - sum(n_g2: 4)
+n_g07 = n_g06 * cycle_count - sum(n_g2: 5)
+n_g08 = n_g07 * cycle_count - sum(n_g2: 6)
+n_g09 = n_g08 * cycle_count - sum(n_g2: 7)
+n_g10 = n_g09 * cycle_count - sum(n_g2: 8)
+n_g11 = n_g10 * cycle_count - sum(n_g2: 9)
+n_g12 = n_g11 * cycle_count - sum(n_g2:10)
+n_g13 = n_g12 * cycle_count - sum(n_g2:11)
+n_g14 = n_g13 * cycle_count - sum(n_g2:12)
+
+total_fish = sum()
+```
+
+a) when does each generation produce the first fish?
+b) how many fish from each generation reproduce 
+
+```{r}
+fish_repro_data = NULL
+for(i in 1:20){
+  
+  G = i
+  day_1G_repro = 6 + 9*(G-1)
+  n_repro = floor((80 - day_1G_repro)/7) + 1
+  
+  fish_repro_data = rbind.data.frame(
+    fish_repro_data,
+    data.frame(
+      G = G, day_1G_repro = day_1G_repro, n_repro = n_repro
+    )
+  )
+  
+}
+```
+
+```{r}
+fish_repro_data
+fish_repro_data %>% dplyr::filter(n_repro < 1)
+```
+
+In the span of 80 days 10th generation of fish is the last one that is produced. This generation does not produce any more fish.  
+
+How many fish does each generation produce?
+
+```{r}
+# day 0 of calendar is day 5 of the reproductive cycle
+days = 80
+cycle_count = floor(days/7)
+
+n_g00 = 1 # starter fish 
+n_g01 = cycle_count
+n_g02 = fish_repro_data[1, "n_repro"] * cycle_count - sum((fish_repro_data[1, "n_repro"]): 1)
+n_g03 = fish_repro_data[2, "n_repro"] * cycle_count - sum((fish_repro_data[2, "n_repro"]): 2)
+n_g04 = fish_repro_data[3, "n_repro"] * cycle_count - sum((fish_repro_data[3, "n_repro"]): 3)
+n_g05 = fish_repro_data[4, "n_repro"] * cycle_count - sum((fish_repro_data[4, "n_repro"]): 4)
+n_g06 = fish_repro_data[5, "n_repro"] * cycle_count - sum((fish_repro_data[5, "n_repro"]): 5)
+n_g07 = fish_repro_data[6, "n_repro"] * cycle_count - sum((fish_repro_data[6, "n_repro"]): 6)
+n_g08 = fish_repro_data[7, "n_repro"] * cycle_count - sum((fish_repro_data[7, "n_repro"]): 7)
+#n_g09 = fish_repro_data[8, "n_repro"] * cycle_count - sum((fish_repro_data[8, "n_repro"]): 8)
+
+
+sum(n_g00, n_g01, n_g02, n_g03, n_g04, n_g05, n_g06, n_g07, n_g08)*5
+
+fish_repro_data
+```
+
+
+
+
+```{r}
+n_all_fish <- NULL
+for(i in data){
+  n_all_fish <- c(n_all_fish, length(i))
+}
+```
+
+```{r}
+plot_data <- data.frame(
+  x = 0:(n_days), 
+  y = n_all_fish
+  ) 
+
+plot_data %>% 
+  ggplot2::ggplot(., aes(x = x, y = y)) + 
+  geom_line() + 
+  theme_light()
+
+```

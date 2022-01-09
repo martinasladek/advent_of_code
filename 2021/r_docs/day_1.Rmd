@@ -1,0 +1,44 @@
+---
+title: "day_1"
+author: "MS"
+date: "07/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(magrittr)
+
+data <- read.delim("../data/day_1_a.txt", header = F, col.names = "x") 
+```
+
+# Task 1
+
+```{r}
+data_1 <- data %>% 
+  dplyr::mutate(
+    x_lead = lead(x), 
+    increase = if_else(x_lead > x, 1, 0)
+  )
+
+sum(data_1$increase, na.rm = T)
+```
+
+# Task 2 
+
+```{r}
+data_2 <- 
+  data %>% 
+  dplyr::mutate(
+    x_lead_1 = lead(x), 
+    x_lead_2 = lead(x, n = 2), 
+    sum = x + x_lead_1 + x_lead_2,
+    sum_lead = lead(sum), 
+    increase = if_else(sum_lead > sum, 1, 0)
+  )
+
+sum(data_2$increase, na.rm = T)
+```
+

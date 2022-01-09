@@ -1,0 +1,185 @@
+---
+title: "day_2"
+author: "MS"
+date: "07/12/2021"
+output: html_document
+---
+
+Is this code efficient? 
+- No. 
+
+But did I manage to avoid explicit loops?
+- Also no. 
+
+But are the loops easy to understand and elegant? 
+... 
+
+I'm having fun though, don't judge. When re-running, comment out all the `print(i)` in loops. 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(magrittr)
+library(stringr)
+
+data <- read.delim("../data/day_4_a.txt", header = F, col.names = "x")
+
+bingo_numbers <- data[1, ] %>% stringr::str_split(., pattern = ",")
+bingo_numbers <- bingo_numbers[[1]] %>% as.numeric()
+
+
+bingo_cards <- data.frame(x = data[-1, ]) %>% 
+  dplyr::mutate(
+    card = rep(1:(nrow(.)/5),  each = 5), 
+    x = trimws(x, which = "both"),
+    x = stringr::str_replace_all(x, "  ", " "), 
+  ) %>% 
+  tidyr::separate(., x, into = c(as.character(1:5)), sep = " ") %>% 
+  dplyr::mutate(across(1:5, as.numeric))
+
+
+#bingo_numbers <- c(87,7,82,21,47,88,12,71,24,35,10,90,4,97,30,55,36,74,19,50,23,46,13,44,69,27,2,0,37,33,99,49,77,15,89,98,31,51,22,96,73,94,95,18,52,78,32,83,85,54,75,84,59,25,76,45,20,48,9,28,39,70,63,56,5,68,61,26,58,92,67,53,43,62,17,81,80,66,91,93,41,64,14,8,57,38,34,16,42,11,86,72,40,65,79,6,3,29,60,1)
+```
+
+
+# Task 1 
+
+- identify the winning board 
+- get sum of unmarked numbers
+- multiply the sum by the number that was last called when the board won
+
+
+```{r}
+replace_matching <- function(x, bingo_num_i){
+  x = if_else(x == bingo_num_i, 100, as.numeric(x))
+}
+
+#test <- bingo_list[[1]] %>% 
+  
+evaluate_bingo <- function(bingo_list_df, i){  
+  
+  bingo_list_df %<>% dplyr::mutate(across(1:5, ~replace_matching(., bingo_num_i = i)))
+  
+  row_1 = bingo_list_df[1, 1:5] %>% rowSums()
+  row_2 = bingo_list_df[2, 1:5] %>% rowSums()
+  row_3 = bingo_list_df[3, 1:5] %>% rowSums()
+  row_4 = bingo_list_df[4, 1:5] %>% rowSums()
+  row_5 = bingo_list_df[5, 1:5] %>% rowSums()
+  
+  col_1 = bingo_list_df[1:5, 1] %>% sum()
+  col_2 = bingo_list_df[1:5, 2] %>% sum()
+  col_3 = bingo_list_df[1:5, 3] %>% sum()
+  col_4 = bingo_list_df[1:5, 4] %>% sum()
+  col_5 = bingo_list_df[1:5, 5] %>% sum()
+  
+  is_bingo <<- 500 %in% c(row_1, row_2, row_3, row_4, row_5, 
+                         col_1, col_2, col_3, col_4, col_5)
+  
+  if(is_bingo == TRUE){
+    print(
+      paste0("card number:", bingo_list_df$card[1], ", winning number:", i)
+      )
+    }
+  
+  return(bingo_list_df)
+  
+}
+```
+
+
+```{r}
+bingo_list <- bingo_cards %>% group_split(card)
+bingo_list_original <- bingo_list
+
+for(i in bingo_numbers){
+  
+  for(j in 1:length(bingo_list)){
+    bingo_list[[j]] <- evaluate_bingo(bingo_list[[j]], i = i)
+    if(is_bingo == TRUE){break}
+  }
+  
+  #bingo_list <- purrr::map(bingo_list, .f = ~evaluate_bingo(., i = i))
+  if(is_bingo == TRUE){break}
+  print(i)
+  
+}
+
+```
+
+```{r}
+winning_card_numbers <- bingo_list[[j]][1:5] %>% unlist()
+
+unmarked_sum <- winning_card_numbers[winning_card_numbers!=100] %>% sum()
+unmarked_sum*i
+```
+
+# Task 2
+
+- Figure out which board wins last, 
+- sum unmarked numbers and the final score 
+
+```{r}
+bingo_list <- bingo_cards %>% group_split(card)
+bingo_list_original <- bingo_list
+
+all_winning_cards <- NULL
+
+for(i in bingo_numbers){
+  
+  for(j in 1:length(bingo_list)){
+    bingo_list[[j]] <- evaluate_bingo(bingo_list[[j]], i = i)
+    if(is_bingo == TRUE){
+      all_winning_cards <- rbind.data.frame(
+      all_winning_cards, 
+      data.frame(
+        card = j, bingo_number = i
+      )
+    )
+    }
+  }
+  
+  print(i)
+  
+}
+
+```
+
+```{r}
+last_winning_card <- 
+  all_winning_cards %>% 
+  dplyr::group_by(card) %>% 
+  dplyr::filter(row_number() == 1)
+
+last_card <- last_winning_card[nrow(last_winning_card), 1]
+last_number <- last_winning_card[nrow(last_winning_card), 2]
+
+```
+
+```{r}
+bingo_list <- bingo_cards %>% group_split(card)
+bingo_list_original <- bingo_list
+
+for(i in bingo_numbers){
+  
+  for(j in 1:length(bingo_list)){
+    bingo_list[[j]] <- evaluate_bingo(bingo_list[[j]], i = i)
+    if(j == last_card$card & i == last_number$bingo_number){break}
+  }
+  
+  #bingo_list <- purrr::map(bingo_list, .f = ~evaluate_bingo(., i = i))
+  if(j == last_card$card & i == last_number$bingo_number){break}
+  print(i)
+  
+}
+```
+
+```{r}
+winning_card_numbers <- bingo_list[[j]][1:5] %>% unlist()
+
+unmarked_sum <- winning_card_numbers[winning_card_numbers!=100] %>% sum()
+unmarked_sum*i
+
+```
+
+

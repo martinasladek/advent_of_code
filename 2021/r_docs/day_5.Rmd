@@ -1,0 +1,94 @@
+---
+title: "day_2"
+author: "MS"
+date: "07/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(magrittr)
+library(stringr)
+
+data <- read.delim("../data/day_5_example.txt", header = F, col.names = "x") %>% 
+  tidyr::separate(x, sep = "->", into = c("xy1", "xy2")) %>% 
+  tidyr::separate(xy1, sep = ",", into = c("x1", "y1")) %>% 
+  tidyr::separate(xy2, sep = ",", into = c("x2", "y2")) %>% 
+  dplyr::mutate(across(1:4, as.numeric)) %>% 
+  tibble::tibble()
+
+data
+```
+
+```{r eval = FALSE}
+n = 9
+
+matrix <- matrix(0, nrow = n, ncol = n) %>% t()
+matrix 
+```
+
+# Task 1
+
+- only consider cases where x1 = x2 or y1 = y2
+
+```{r}
+data_t1 <- data %>% 
+  dplyr::filter((x1 == x2) | (y1 == y2)) %>% 
+  dplyr::rowwise() %>% 
+  dplyr::mutate(x1_x2 = list(x1:x2), 
+                y1_y2 = list(y1:y2))
+
+comb_data <- NULL
+for(i in 1:nrow(data_t1)){
+  comb_i <- tidyr::crossing(data_t1$x1_x2[[i]], data_t1$y1_y2[[i]]) %>% 
+    dplyr::mutate(i = i)
+  
+  comb_data = rbind(comb_data, comb_i)
+}
+
+comb_data %>% 
+  dplyr::mutate(xy = paste0(`data_t1$x1_x2[[i]]`, " ", `data_t1$y1_y2[[i]]`)) %>% 
+  dplyr::group_by(xy) %>% 
+  dplyr::summarise(n = n()) %>% 
+  dplyr::filter(n >= 2) %>% 
+  nrow(.)
+```
+
+# Task 2 
+
+Okay what the fuck. 
+
+```{r}
+data_t2 <- data %>% 
+  #dplyr::filter((x1 == x2) | (y1 == y2)) %>% 
+  dplyr::rowwise() %>% 
+  dplyr::mutate(x1_x2 = list(x1:x2), 
+                y1_y2 = list(y1:y2))
+
+
+comb_data <- NULL
+for(i in 1:nrow(data_t2)){
+  
+  if((data_t2[i, "x1"] == data_t2[i, "x2"]) | (data_t2[i, "y1"] == data_t2[i, "y2"])){
+    comb_i <- tidyr::crossing(data_t2$x1_x2[[i]], data_t2$y1_y2[[i]]) %>% 
+      dplyr::mutate(i = i)
+  } else {
+    comb_i <- cbind.data.frame(data_t2$x1_x2[[i]], data_t2$y1_y2[[i]])  %>% 
+    dplyr::mutate(i = i)
+  }
+  comb_data = rbind(comb_data, comb_i)
+}
+
+comb_data %>% 
+  dplyr::mutate(xy = paste0(`data_t2$x1_x2[[i]]`, " ", `data_t2$y1_y2[[i]]`)) %>% 
+  dplyr::group_by(xy) %>% 
+  dplyr::summarise(n = n()) %>% 
+  dplyr::filter(n >= 2) %>% 
+  nrow(.)
+```
+
+
+
+

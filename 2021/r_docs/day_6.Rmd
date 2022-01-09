@@ -1,0 +1,352 @@
+---
+title: "day_2"
+author: "MS"
+date: "07/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(stringr)
+
+
+#data[[1]] <- c(3,4,3,1,2)
+#data[[1]] <- c(3,5,1,5,3,2,1,3,4,2,5,1,3,3,2,5,1,3,1,5,5,1,1,1,2,4,1,4,5,2,1,2,4,3,1,2,3,4,3,4,4,5,1,1,1,1,5,5,3,4,4,4,5,3,4,1,4,3,3,2,1,1,3,3,3,2,1,3,5,2,3,4,2,5,4,5,4,4,2,2,3,3,3,3,5,4,2,3,1,2,1,1,2,2,5,1,1,4,1,5,3,2,1,4,1,5,1,4,5,2,1,1,1,4,5,4,2,4,5,4,2,4,4,1,1,2,2,1,1,2,3,3,2,5,2,1,1,2,1,1,1,3,2,3,1,5,4,5,3,3,2,1,1,1,3,5,1,1,4,4,5,4,3,3,3,3,2,4,5,2,1,1,1,4,2,4,2,2,5,5,5,4,1,1,5,1,5,2,1,3,3,2,5,2,1,2,4,3,3,1,5,4,1,1,1,4,2,5,5,4,4,3,4,3,1,5,5,2,5,4,2,3,4,1,1,4,4,3,4,1,3,4,1,1,4,3,2,2,5,3,1,4,4,4,1,3,4,3,1,5,3,3,5,5,4,4,1,2,4,2,2,3,1,1,4,5,3,1,1,1,1,3,5,4,1,1,2,1,1,2,1,2,3,1,1,3,2,2,5,5,1,5,5,1,4,4,3,5,4,4)
+
+
+# data <- read.delim("../data/day_6_example_full.txt", header = F)
+# 
+# data %>% 
+#   tidyr::separate(V1, sep = ",", into = as.character(c(1:26))) %>% 
+#   write.csv("../data/day_6_bamboozled.csv")
+
+
+
+
+```
+
+WG100XM3
+
+# Task 1
+
+```{r}
+data = list()
+data[[1]]  = c(5)
+
+n_days = 256
+
+for(i in 2:(n_days+1)){
+  data[[i]] <- replace(data[[i-1]], data[[i-1]]==0, 7)
+  data[[i]] <- data[[i]] - 1
+  
+  n_new_fish <- sum(data[[i-1]] == 0)
+  
+  data[[i]] <- c(data[[i]], rep(8, times = n_new_fish))
+
+  print(i)
+}
+
+
+```
+
+
+# Task 2
+
+```{r}
+n_all_fish <- NULL
+for(i in data){
+  n_all_fish <- c(n_all_fish, length(i))
+}
+```
+
+```{r}
+plot_data <- data.frame(
+  x = 0:(n_days), 
+  y = n_all_fish
+  ) 
+
+plot_data %>% 
+  ggplot2::ggplot(., aes(x = x, y = y)) + 
+  geom_line() + 
+  theme_light()
+
+```
+
+```{r}
+value_128 <- plot_data[129, ]$y
+value_128
+```
+
+```{r}
+plot_data
+```
+
+
+9076200
+
+```{r}
+percent_growth <- function(initial, final, time_periods){
+  ((final - initial)/ initial *100) / time_periods
+}
+
+exp_growth <- function(initial, time_periods, percent_growth){
+  initial * (1 + percent_growth) * time_periods
+}
+
+exp_growth(initial = 300, 
+           time_periods = 256, 
+           percent_growth = 539689150680)
+```
+
+
+```{r}
+percent_growth(initial = 1, 
+               final = 348, 
+               time_periods = 64)
+
+percent_growth(initial = 1, 
+               final = 90763, 
+               time_periods = 128)
+```
+
+
+```{r}
+plot_data
+
+70907.81 /542.1875
+```
+
+```{r}
+dat_test = NULL
+for(i in 1:83){
+  dat_test <-rbind(dat_test, 
+                   data.frame(x = i, 
+                              y_2 = generation_number(i)*n_original_generation))
+}
+
+dplyr::left_join(plot_data, dat_test, by = "x") %>% 
+  dplyr::mutate(#by_five = y / 5, 
+                off_by = y_2 - y, 
+                #off_by_five = off_by / 5
+                ) 
+
+```
+
+
+x = t 
+
+exponential.model <- lm(log(Counts)~ Time)
+summary(exponential.model)
+
+timevalues <- seq(0, 30, 0.1)
+Counts.exponential2 <- exp(predict(exponential.model,list(Time=timevalues)))
+
+```{r}
+exponential.model <- lm(log(y)~ x, data = plot_data[6:81, ])
+#summary(exponential.model)
+
+value <- 257
+Counts.exponential2 <- exp(predict(exponential.model,list(x = value)))
+Counts.exponential2 
+
+for(i in 1:81){
+  print(
+    exp(predict(lm(log(y)~ x, data = plot_data[i:81, ]),
+                list(x = value))) == 26984457539
+  )
+}
+
+plot_data %>% 
+  dplyr::filter(y %in% c(489, 163))
+
+
+plot_data
+```
+
+ The term "exp(x)" is the same as writing ex or e^x or "e to the x" or "e to the power of x". 
+ 
+ [ 9, 11]
+ [17, 22]
+ [32, 88]
+-
+ 
+[1, 5]
+
+5 = ab^1
+
+[81, 5934]
+
+5934 = ab^81
+
+-
+
+5 = ab
+a = 5/b
+
+5934 = (5/b)*b^81
+
+b = 1.0925208129979777893936542491309425357041785165297580510247510298 
+
+a = 5 / b
+
+a = 4.576572
+
+```{r}
+a = 4.576572
+b = 1.0925208129979777893936542491309425357041785165297580510247510298 
+x = 256
+y = a*(b)^x
+
+y
+```
+
+
+26984457539
+
+```{r}
+plot_data %>% 
+  dplyr::mutate(change = y - lag(y)) %>% 
+  ggplot2::ggplot(., aes(x = x, y = change)) + 
+  #coord_cartesian(xlim = c(0, 50)) + 
+  geom_line() + 
+  theme_light()
+```
+
+```{r}
+plot_data %>% 
+  dplyr::mutate(change = y/lag(y)) %>% 
+  ggplot2::ggplot(., aes(x = x, y = change)) + 
+  #coord_cartesian(xlim = c(0, 50)) + 
+  geom_line() + 
+  theme_light()
+
+plot_data %>% 
+  dplyr::mutate(change = y/lag(y)) 
+```
+
+```{r}
+plot_data %>% 
+  dplyr::mutate(change = y/x) %>% 
+  ggplot2::ggplot(., aes(x = x, y = change)) + 
+  #coord_cartesian(xlim = c(0, 50)) + 
+  geom_line() + 
+  theme_light()
+
+plot_data %>% 
+  dplyr::mutate(change = y/x) 
+```
+
+
+```{r}
+plot_data %>% 
+  dplyr::mutate(change = y/y[1]) %>% 
+  ggplot2::ggplot(., aes(x = x, y = change)) + 
+  #coord_cartesian(xlim = c(0, 50)) + 
+  geom_line() + 
+  theme_light()
+
+plot_data %>% 
+  dplyr::mutate(change = y/y[1])
+```
+5, 14, 23, 32, 
+
+1 - 5
+32 - 88
+64 - 1467
+96 - 24939
+128 - 423963
+160 - 7207371
+192 - 122525307
+224 - 2082930219
+256 - 35409813723
+
+128 - 430418
+192 - 126285000
+256 = 
+
+x / 126285000 = 293.4
+
+```{r}
+div <- c(1, 2, 4, 8, 16, 32, 64, 128, 256)
+
+plot_data 
+```
+
+26984457539
+
+```{r}
+for(i in plot_data$x){
+  print(paste(c(26984457539/i, i)))
+}
+```
+
+```{r}
+new_fish = c()
+for(i in data){
+  new_fish_i = sum(i[1:length(i)] == 8)
+  new_fish = c(new_fish, new_fish_i)
+}
+
+plot_data %>% 
+  dplyr::mutate(
+    new_fish = new_fish
+  ) %>% 
+  ggplot2::ggplot(., aes(x = x, y = new_fish)) + 
+  #coord_cartesian(xlim = c(0, 50)) + 
+  geom_line() + 
+  theme_light()
+```
+
+
+No: 
+
+```{r}
+data <- list()
+data[[1]] <- c(3,4,3,1,2)
+#data[[1]] <- c(3,5,1,5,3,2,1,3,4,2,5,1,3,3,2,5,1,3,1,5,5,1,1,1,2,4,1,4,5,2,1,2,4,3,1,2,3,4,3,4,4,5,1,1,1,1,5,5,3,4,4,4,5,3,4,1,4,3,3,2,1,1,3,3,3,2,1,3,5,2,3,4,2,5,4,5,4,4,2,2,3,3,3,3,5,4,2,3,1,2,1,1,2,2,5,1,1,4,1,5,3,2,1,4,1,5,1,4,5,2,1,1,1,4,5,4,2,4,5,4,2,4,4,1,1,2,2,1,1,2,3,3,2,5,2,1,1,2,1,1,1,3,2,3,1,5,4,5,3,3,2,1,1,1,3,5,1,1,4,4,5,4,3,3,3,3,2,4,5,2,1,1,1,4,2,4,2,2,5,5,5,4,1,1,5,1,5,2,1,3,3,2,5,2,1,2,4,3,3,1,5,4,1,1,1,4,2,5,5,4,4,3,4,3,1,5,5,2,5,4,2,3,4,1,1,4,4,3,4,1,3,4,1,1,4,3,2,2,5,3,1,4,4,4,1,3,4,3,1,5,3,3,5,5,4,4,1,2,4,2,2,3,1,1,4,5,3,1,1,1,1,3,5,4,1,1,2,1,1,2,1,2,3,1,1,3,2,2,5,5,1,5,5,1,4,4,3,5,4,4)
+n_days = 132
+
+for(i in 2:(n_days+1)){
+  data[[i]] <- replace(data[[i-1]], data[[i-1]]==0, 7)
+  data[[i]] <- data[[i]] - 1
+  
+  n_new_fish <- sum(data[[i-1]] == 0)
+  
+  data[[i]] <- c(data[[i]], rep(8, times = n_new_fish))
+  
+  # if(i >= 3){
+  #   data[[i-2]] <- 0
+  # }
+  
+  print(i)
+}
+
+data %>% length()
+```
+
+
+
+```{r}
+generation_number <- function(day){2^(floor(day/9) +1)}
+n_original_generation = 5
+generation_number(83)*n_original_generation
+```
+
+
+```{r}
+#seq(2, 90, 9)*5
+
+data.frame(
+  x = seq(1, 90, 7), 
+  y = seq(1, 90, 7)*5
+)
+
+
+
+
+```
+
