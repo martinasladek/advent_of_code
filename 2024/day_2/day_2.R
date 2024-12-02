@@ -6,11 +6,8 @@
 puzzle_input <- readLines("2024/day_2/day_2.txt") |> 
   purrr::map(
     .f = \(x) {
-      stringr::str_split(x, pattern = " ")
+      x |> stringr::str_split(pattern = " ") |> unlist() |> as.numeric()
     }
-  ) |> 
-  purrr::map(
-    .f = \(x) {x |> unlist() |> as.numeric()}
   )
 
 
