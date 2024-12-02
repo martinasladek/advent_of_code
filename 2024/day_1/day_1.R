@@ -1,5 +1,5 @@
 
-# Puzzle A ----------------------------------------------------------------
+# Task 1 ----------------------------------------------------------------
 
 puzzle_input <- readr::read_csv("2024/day_1/day_1.txt", col_names = "lists") |> 
   tidyr::separate(col = lists, into = c("list_1", "list_2"), sep = "   ") |> 
@@ -13,7 +13,7 @@ puzzle_input <- readr::read_csv("2024/day_1/day_1.txt", col_names = "lists") |>
 answer_1 <- sum(puzzle_input$distance)
 
 
-# Puzzle B ----------------------------------------------------------------
+# Task 2 ----------------------------------------------------------------
 
 puzzle_input <- puzzle_input |> 
   dplyr::rowwise() |> 
