@@ -37,3 +37,9 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+*.txt
+
+/2021/data/
+
+*.DS_Store
