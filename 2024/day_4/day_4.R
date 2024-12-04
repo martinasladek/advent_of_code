@@ -74,20 +74,21 @@ answer_1 <- dir_1 + dir_2 + dir_3 + dir_4 + dir_5 + dir_6
 
 # Task 2 ------------------------------------------------------------------
 
+collapse_detect <- function(x, collapse = "", pattern = "MAS|SAM"){
+  x |> paste0(collapse = collapse) |> 
+    stringr::str_detect(pattern = pattern) 
+}
 
 search_mas_square <- function(matrix = puzzle_mat, start_row, start_col){
   
   lil_square <- matrix[start_row:(start_row+2), start_col:(start_col+2)]
   
-  diag_1 <- c(lil_square |> diag()) |> 
-    paste0(collapse = "") |> 
-    stringr::str_detect(pattern = "MAS|SAM") 
+  diags <- purrr::map(
+    .x = list(c(lil_square |> diag()), c(lil_square[,3:1] |> diag())), 
+    .f = collapse_detect
+  ) |> sum_from_list()
   
-  diag_2 <- c(lil_square[,3:1] |> diag()) |> 
-    paste0(collapse = "") |> 
-    stringr::str_detect(pattern = "MAS|SAM") 
-  
-  (diag_1 + diag_2) == 2
+  diags == 2
   
 }
 
