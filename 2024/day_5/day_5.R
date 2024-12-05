@@ -70,6 +70,7 @@ swap_pages <- function(update_i, rules){
     if(n_broken_rules == 0) break 
     
     else{
+      
       x_swap <- rules_broken[1, ]$x
       y_swap <- rules_broken[1, ]$y
       
@@ -80,9 +81,7 @@ swap_pages <- function(update_i, rules){
       update_i[y_swap_index] <- x_swap
       
     }
-    
   }
-  
   return(update_i)
 }
 
