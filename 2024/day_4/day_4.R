@@ -64,15 +64,9 @@ search_mas_square <- function(matrix = puzzle_mat, start_row, start_col){
   
 }
 
-start_row = 1
-start_col = 1
-
-max_start_row = n_rows - 2
-max_start_col = n_cols - 2
-
 location_grid <- tidyr::expand_grid(
-  start_row = start_row:max_start_row, 
-  start_col = start_col:max_start_col
+  start_row = 1:(n_rows - 2), 
+  start_col = 1:(n_cols - 2)
 )
 
 answer_2 <- purrr::pmap(
