@@ -2,7 +2,7 @@
 
 # Task 1 ------------------------------------------------------------------
 
-puzzle_input <- readr::read_csv(file = "2024/day_4/day_4.txt", col_names = FALSE) |> 
+puzzle_input <- readr::read_csv(file = "2024/day_4/day_4_example.txt", col_names = FALSE) |> 
   dplyr::mutate(
     X1 = stringr::str_split(X1, pattern = "", simplify = TRUE)
   ) |> tidyr::unnest(cols = X1)
@@ -12,6 +12,7 @@ sum_from_list <- function(list){
 }
 
 search_xmas <- function(x){
+
 
    x_string <- x |> paste0(collapse = "") 
    xmas_loc <- x_string |> stringr::str_locate_all(pattern = "XMAS") 

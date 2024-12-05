@@ -2,7 +2,7 @@
 
 # Task 1 ------------------------------------------------------------------
 
-puzzle_input <- readLines("2024/day_3/day_3.txt")
+puzzle_input <- readLines("2024/day_3/day_3_example_2.txt")
 
 mul_regex <- "mul\\([0-9.]+,[0-9.]+\\)"
 

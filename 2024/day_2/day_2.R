@@ -3,7 +3,7 @@
 # Task 1 ------------------------------------------------------------------
 
 
-puzzle_input <- readLines("2024/day_2/day_2.txt") |> 
+puzzle_input <- readLines("2024/day_2/day_2_example.txt") |> 
   purrr::map(
     .f = \(x) {
       x |> stringr::str_split(pattern = " ") |> unlist() |> as.numeric()
