@@ -3,7 +3,7 @@ options(scipen = 999)
 
 # Part 1 ------------------------------------------------------------------
 
-puzzle_input <- readLines("2024/day_7/day_7.txt")
+puzzle_input <- readLines("2024/day_7/day_7_example.txt")
 
 calib_tib <- tibble::tibble(
   result = puzzle_input |> stringr::str_extract_all(pattern = "^.+?(?=:)") |> unlist() |> as.numeric(),
@@ -30,13 +30,9 @@ ignore_math_rules <- function(math_string_i){
     for (i in 2:length(steps)) {
       symbol <- substr(steps[i], 1, 1)
       number <- as.numeric(substr(steps[i], 2, nchar(steps[i])))
-      if (symbol == "+") {
-        result <- result + number
-      } else if (symbol == "_") {
-        result <- paste0(result, number) |> as.numeric() # part 2 only 
-      } else if (symbol == "*") {
-        result <- result * number
-      } 
+      if (symbol == "+") result <- result + number
+      else if (symbol == "_") result <- paste0(result, number) |> as.numeric() # part 2 only 
+      else if (symbol == "*") result <- result * number
     }
     
     return(result)
